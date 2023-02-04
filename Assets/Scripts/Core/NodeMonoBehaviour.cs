@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
 
 namespace Synapse.Core
 {
@@ -16,9 +17,13 @@ namespace Synapse.Core
     {
         [SerializeField] private NodeData _nodeData;
         [SerializeField] private List<NodeMonoBehaviour> _neighbouringNodes = new List<NodeMonoBehaviour>();
+
+        [SerializeField] private UnityEvent OnStartDrawPath;
+        [SerializeField] private UnityEvent OnEndDrawPath;
+
         public List<NodeMonoBehaviour> NeighbouringNodes => _neighbouringNodes;
 
-        private VisibleState _visibleState;
+        private VisibleState _visibleState = VisibleState.Visible;
         private Node _node;
         public Node Node => _node;
 
@@ -36,7 +41,15 @@ namespace Synapse.Core
         private void Awake()
         {
             _node = new Node(_nodeData);
+            Hide();
         }
+
+        public void Hide()
+        {
+            if (_visibleState == VisibleState.Hidden) return;
+            _visibleState = VisibleState.Anonymous;
+            gameObject.SetActive(false);
+        }            
 
         public void RevealFromFogOfWar()
         {
@@ -52,6 +65,19 @@ namespace Synapse.Core
                 node.RevealFromFogOfWar();
             gameObject.SetActive(true);
         }
+
+        public void StartPathConnection()
+        {
+
+            OnStartDrawPath?.Invoke();
+        }
+
+
+        public void EndPathConnection()
+        {
+            OnEndDrawPath?.Invoke();
+        }
+
 
 #if UNITY_EDITOR
         private void Reset()
@@ -79,6 +105,9 @@ namespace Synapse.Core
 
         public void Restart()
         {
+            Hide();
+            Node.Connections.Clear();
+            Node.CanInteract = false;
             new Node(_nodeData);
         }
     }

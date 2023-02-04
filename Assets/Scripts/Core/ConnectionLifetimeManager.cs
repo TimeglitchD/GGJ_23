@@ -35,21 +35,20 @@ namespace Synapse.Core
 
             Vector3 offset = (b.Node.GetConnectionIndex(a.Node) == 1) ? new Vector3(0.0f, .5f, 0.0f) : new Vector3(0.0f, -.5f, 0.0f);
 
-            connectionObject.transform.position = center + new Vector3(0.0f, .0f, 10.0f); ;
-            text.transform.position = center - .1f * count * diff;
+            connectionObject.transform.position = center;
+            text.transform.position = center - .1f * count * diff + new Vector3(0.0f, .0f, -2.0f);
 
             float dist = Vector3.Distance(b.transform.position, a.transform.position);
             sprite.transform.localScale = new Vector3(dist * .5f, .1f, 1.0f);
             sprite.gameObject.transform.rotation = Quaternion.LookRotation(c, Vector3.forward) * Quaternion.Euler(-90, 0, 90);
-            sprite.transform.localPosition += new Vector3(0.0f, .5f, 0.0f);
+            sprite.transform.localPosition += new Vector3(0.0f, .5f, -1.0f);
 
             text.text = connectionObject.Connection.DecayValue.ToString();
             _connections.Add(connectionObject);
 
             foreach (var item in a.Node.Connections)
                 item.Node.CanInteract = true;
-
-            Debug.Log($"Added: {connectionObject.name}");
+            b.ConnectToNetwork();
         }
 
         public void DestroyConnection(ConnectionMonobehaviour connectionBehaviour)
