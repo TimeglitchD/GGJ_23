@@ -4,56 +4,141 @@ using UnityEngine;
 
 namespace Synapse.Core
 {
+    public enum NodeType
+    {
+        Hacker,
+        Government
+    }
+
+    [System.Serializable]
+    public struct NodeData
+    {
+        public string Label;
+        [Range(1, 10)] public  int Value;
+        public NodeType NodeType;
+        
+    }
+
     public class Node
     {
-        public int Id = -1;
-        private string _label;
-        [Range(1, 10)] private int _value;
-        public string Label => _label;
-        public int Value => _value;
+
+        private static int NextGroupId = 0;
+       
+        private NodeData _nodeData;
+
+        public int GroupId { get; set; }
+        public NodeData NodeData => _nodeData;
+        public bool CanInteract { get; set; }
+
+        public int HackerConnections { get {
+            int count = 0; 
+            foreach (Connection connection in Connections)
+                if (connection.Node.NodeData.NodeType == NodeType.Hacker)
+                   count++;
+                return count;
+            }
+        }
+
+        public Node(NodeData nodeData)
+        {
+            _nodeData = nodeData;
+            GroupId = -1;
+        }
+        public List<Connection> Connections = new List<Connection>();
         
-        private List<Node> _connectedNodes = new List<Node>();
-        private List<Node> _nodesInRange = new List<Node>();
-
-        public event Action<int> OnIdChanged;
-
-        public bool HasConnections => _connectedNodes.Count > 0;
-        public bool IsDirectlyConnected(Node node) => _connectedNodes.Contains(node);
-        public bool IsInRange(Node node) => _nodesInRange.Contains(node);
-        
-
-        public Node(int id, string label, int value, List<Node> InRange)
+        public int GetConnectionIndex(Node node)
         {
-            Id = id;
-            _label = label;
-            _value = value;
-            _nodesInRange = InRange;
+            for (int i = 0; i < Connections.Count; i++)
+            {
+                if (Connections[i].Node == node)
+                return i;
+            }
+            return -1;;      
         }
 
-        public void SetId(int id)
+        public int TryConnect(Node node)
         {
-            Id = id;
-            OnIdChanged?.Invoke(id);
+            int index = GetConnectionIndex(node);
+            if (index >= 0) return -1;
+
+            Connections.Add(new Connection(node, Connection.CalculateDecayValue(this, node)));
+            if (GroupId != node.GroupId)
+            {
+                List<Node> traversedNodes = new List<Node>();
+                TraverseGroup(ref traversedNodes);
+            }
+            return Connections.Count - 1;
         }
 
-        public void Add(Node node) => _connectedNodes.Add(node);
-        public void Remove(Node node) => _connectedNodes.Remove(node);
-
-        public void Traverse(ref List<Node> nodes)
+        public int RemoveConnection(Connection connection)
         {
-            if (nodes.Contains(this)) return;
-            nodes.Add(this);
-            for (int i = 0; i < _connectedNodes.Count; i++)
-                _connectedNodes[i].Traverse(ref nodes);
+            if (Connections.Contains(connection))
+            {
+                Node node = connection.Node;
+                Connections.Remove(connection);
+                if (Connections.Count == 0) CanInteract = false;
+                else if (node.Connections.Count == 0) CanInteract = false;
+
+                List<Node> traversedNodes = new List<Node>();
+                if (!IsConnected(node, ref traversedNodes))
+                {
+                    NextGroupId++;
+                    GroupId = NextGroupId;
+                    traversedNodes.Clear();
+                    TraverseGroup(ref traversedNodes);
+                    return 1;
+                }
+            }
+            return 0;
         }
 
-        public bool IsInNetwork(Node node)
+        public int TryDisconnect(Node node)
         {
+            int index = GetConnectionIndex(node);
+
+            if (Connections.Count == 0)
+                GroupId = -1;
+            if (node.Connections.Count == 0)
+                node.GroupId = -1;
+
+            if (index >= 0)
+            {
+                Connections.RemoveAt(index);
+                return 1;
+            }
+
             List<Node> traversedNodes = new List<Node>();
-            Traverse(ref traversedNodes);
-            return traversedNodes.Contains(node);
-        }             
+            if (!IsConnected(node, ref traversedNodes))
+            {
+                NextGroupId++;
+                GroupId = NextGroupId;
+                traversedNodes.Clear();
+                TraverseGroup(ref traversedNodes);
+            }
+            return 0;
+        }
 
-        public static string GetEdgeKey(Node a, Node b) => a.GetHashCode().ToString() + b.GetHashCode().ToString();
+        private bool IsConnected(Node node, ref List<Node> traverseNodes)
+        {
+            foreach (Connection connection in Connections)
+            {
+                if (traverseNodes.Contains(node)) return false;
+                if (node == connection.Node) return true;
+                traverseNodes.Add(node);
+                bool foundInRecursion = connection.Node.IsConnected(node, ref traverseNodes);
+                if (foundInRecursion) return true;
+            }
+            return false;
+        }
+
+        private void TraverseGroup(ref List<Node> traversedNodes)
+        {
+            if (traversedNodes.Contains(this)) return;
+            traversedNodes.Add(this);
+            GroupId = traversedNodes[0].GroupId;
+
+            foreach (Connection connection in Connections)
+                connection.Node.TraverseGroup(ref traversedNodes);
+        }
     }
 }

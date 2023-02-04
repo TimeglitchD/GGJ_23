@@ -4,27 +4,19 @@ using UnityEngine;
 using UnityEngine.Events;
 
 namespace Synapse.Controls {
-
     public class NodeConnectionsInput : MonoBehaviour
     {
-        [SerializeField] private Material[] _materials;
+        [SerializeField] private LineRenderer _lineRenderer;
 
         [SerializeField] private EventSystem _eventSystem;
-        [SerializeField] private LineRenderer _lineRenderer; 
+        [SerializeField] private ConnectionLifetimeManager _connectionLifetimeManager;
+       
+        public UnityEvent<NodeMonoBehaviour> OnStartConnection;
+        public UnityEvent<NodeMonoBehaviour, NodeMonoBehaviour> OnConnectionSuccess;
+        public UnityEvent<NodeMonoBehaviour, NodeMonoBehaviour> OnConnectionFailed;
+        public UnityEvent<NodeMonoBehaviour, Vector3> OnConnectionCanceled;
 
-        private NodeConnecter _nodeConnections = new NodeConnecter();
-        public NodeConnecter NodeConnections => _nodeConnections;
-
-        private ClickableNode _currentStartNode;
-
-        public UnityEvent<Edge> OnEdgeCreated;
-
-        public UnityEvent<ClickableNode> OnStartConnection;
-        public UnityEvent<ClickableNode, ClickableNode> OnConnectionSuccess;
-        public UnityEvent<ClickableNode, ClickableNode> OnConnectionFailed;
-        public UnityEvent<ClickableNode, Vector3> OnConnectionCanceled;
-
-        ClickableNode _lastNode;
+        NodeMonoBehaviour _connecterPathStart;
 
 #if UNITY_EDITOR
         [Space]
@@ -43,97 +35,97 @@ namespace Synapse.Controls {
 
         private void OnEnable()
         {
-            _eventSystem.OnMouseDown.AddListener(TryStartConnecting);
-            _eventSystem.OnMouseUp.AddListener(TryConnecting);
+            _eventSystem.OnMouseDown.AddListener(OnDown);
+            _eventSystem.OnMouseUp.AddListener(OnUp);
         }
 
         private void OnDisable()
         {
-            _eventSystem.OnMouseDown.RemoveListener(TryStartConnecting);
-            _eventSystem.OnMouseUp.RemoveListener(TryConnecting);
+            _eventSystem.OnMouseDown.RemoveListener(OnDown);
+            _eventSystem.OnMouseUp.RemoveListener(OnUp);
         }
 
-        private void TryStartConnecting(GameObject go)
+        private void OnDown(GameObject go) => StartPathConnecter(go);
+        private void OnUp(GameObject go) => EndPathConnector(go);
+
+        private void StartPathConnecter(GameObject go)
         {
             if (go == null) return;
-            ClickableNode node = go.GetComponent<ClickableNode>();
+            NodeMonoBehaviour node = go.GetComponent<NodeMonoBehaviour>();
             if (node == null) return;
-            if (node.Node.Id < 0) return;
+            if (!node.Node.CanInteract) return;
 
-            _currentStartNode = node;
-            OnStartConnection?.Invoke(_currentStartNode);
-
-#if UNITY_EDITOR
-            if (ShowDebugLogs) Debug.Log($"Started connection for: {_currentStartNode.Node.Label}");
-#endif
+            _connecterPathStart = node;
+            //Debug.Log("Starting path");
+            OnStartConnection?.Invoke(_connecterPathStart);
         }
 
         private void Update()
         {
-            if (_currentStartNode == null)
+            if (_connecterPathStart == null)
             {
                 _lineRenderer.enabled = false;
                 return;
             }
             _lineRenderer.enabled = true;
-            _lineRenderer.SetPositions(new Vector3[2] { _currentStartNode.transform.position, _eventSystem.CurrentMousePosition });
+            _lineRenderer.SetPositions(new Vector3[2] { _connecterPathStart.transform.position, _eventSystem.CurrentMousePosition });
         }
 
-       
-        private void TryConnecting(GameObject go)
+
+        private void EndPathConnector(GameObject go)
         {
-            if (_currentStartNode == null) return;
+            //Debug.Log("Ending path");
+            // Has no start of path. Cannot connect
+            if (_connecterPathStart == null) return;
+
+            // Debug
             _lineRenderer.enabled = false;
 
-            _lastNode = _currentStartNode;
-            if (go != null)
+           
+            // Cancel path if no viable target has been found
+            if (go == null)
             {
-                ClickableNode node = go.GetComponent<ClickableNode>();
-                if (node != null)
-                {
-                    Node a = _currentStartNode.Node;
-                    Node b = node.Node;
-
-                    if (!_nodeConnections.CanConnect(a, b))
-                    {
-#if UNITY_EDITOR
-                        if (ShowDebugLogs)
-                            Debug.Log($"Connection <{a.Label} - {b.Label}> already exists.");
-#endif
-                        OnConnectionFailed?.Invoke(_currentStartNode, node);
-                    }
-                    else
-                    {
-                        OnConnectionSuccess?.Invoke(_currentStartNode, node);
-
-                        // TODO dirty edge drawer
-                        GameObject edgeObject = new GameObject();
-                        LineRenderer line = edgeObject.AddComponent<LineRenderer>();
-                        line.material = _materials[_currentStartNode.Node.Id % Math.Max(1, _materials.Length)];
-                        line.SetPositions(new Vector3[2] { _currentStartNode.transform.position, node.transform.position});
-                        
-
-                        Edge edge = _nodeConnections.ConnectNodes(a, b);
-                        edge.OnDecayed += () => Destroy(line.gameObject);
-                        edge.OnUpdatedId += (id) => line.material = _materials[id % _materials.Length];
-                        node.ConnectToNetwork();
-#if UNITY_EDITOR
-                        if (ShowDebugLogs) 
-                            Debug.Log($"Connecting: <{a.Label} - {b.Label}>");
-#endif
-                        OnEdgeCreated?.Invoke(edge);
-                        
-                    }
-                }
-                _currentStartNode = null;
+                OnConnectionCanceled?.Invoke(_connecterPathStart, _eventSystem.CurrentMousePosition);
+                _connecterPathStart = null;
+                //Debug.Log("No path connected.");
                 return;
             }
-#if UNITY_EDITOR
-            if (ShowDebugLogs && _currentStartNode) Debug.Log($"Connection stopped: {_currentStartNode.Node.Label}");
-#endif
 
-            OnConnectionCanceled?.Invoke(_currentStartNode, _eventSystem.CurrentMousePosition);
-            _currentStartNode = null;
+            NodeMonoBehaviour node = go.GetComponent<NodeMonoBehaviour>();
+            if (node == null || node == _connecterPathStart)
+            {
+                OnConnectionCanceled?.Invoke(_connecterPathStart, _eventSystem.CurrentMousePosition);
+                _connecterPathStart = null;
+                //Debug.Log("No path connected.");
+                return;
+            }
+
+            if (!_connecterPathStart.NeighbouringNodes.Contains(node))
+            {
+                OnConnectionFailed?.Invoke(_connecterPathStart, node);
+                Debug.Log($"Path Failed:{_connecterPathStart.gameObject.name} - {node.gameObject.name} ");
+                _connecterPathStart = null;
+                return;
+            }
+
+            int index = _connecterPathStart.Node.TryConnect(node.Node);
+            if (index >= 0)
+            {
+                // Start applying decay first
+                _connectionLifetimeManager.ApplyDecayToAll();
+
+                // Then spawn a new connection
+                _connectionLifetimeManager.SpawnConnection(_connecterPathStart, node);
+
+                Debug.Log($"Path Connected:{_connecterPathStart.gameObject.name} - {node.gameObject.name} ");
+                OnConnectionSuccess?.Invoke(_connecterPathStart, node);
+                _connecterPathStart = null;
+                return;
+            }
+
+            Debug.Log($"Already has path:{_connecterPathStart.gameObject.name} - {node.gameObject.name} ");
+            _connecterPathStart = null;
+            return;
         }
 
         private void Reset()
