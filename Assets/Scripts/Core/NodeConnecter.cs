@@ -68,14 +68,12 @@ namespace Synapse.Core
             {
                 CurrentId++;
                 UpdateIds(a, CurrentId);
-                Debug.Log($"A split into {CurrentId}");
             }
             if (!b.HasConnections) b.Id = -1;
             else
             {
                 CurrentId++;
                 UpdateIds(b, CurrentId);
-                Debug.Log($"B split into {CurrentId}");
             }
         }
 
