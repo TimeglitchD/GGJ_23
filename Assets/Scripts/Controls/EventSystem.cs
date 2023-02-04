@@ -6,27 +6,34 @@ namespace Synapse.Controls
     public class EventSystem : MonoBehaviour
     {
         [SerializeField] private Camera _camera;
+        [SerializeField] private LayerMask _layers;
 
 #if UNITY_EDITOR
-        [SerializeField] private 
+        [Space]
+        [Header("Debug")]
+        [SerializeField] private bool ShowDebugLogs = false;
 #endif
-        IHover _previousHoverTarget;
 
+        IHover _previousHoverTarget;
         public UnityEvent<GameObject> OnMouseUp;
         public UnityEvent<GameObject> OnMouseDown;
+        private Vector2 _currentMousePosition;
+        public Vector2 CurrentMousePosition => _currentMousePosition;
 
         private void Update()
         {
             // Get mouse position
-            Vector3 mousePos = _camera.ScreenToWorldPoint(Input.mousePosition);
-            Vector2 mousePos2D = new Vector2(mousePos.x, mousePos.y);
+            Vector3 current3dMousePosition = _camera.ScreenToWorldPoint(Input.mousePosition);
+            _currentMousePosition = new Vector2(current3dMousePosition.x, current3dMousePosition.y);
 
-            RaycastHit2D hit = Physics2D.Raycast(mousePos2D, Vector2.zero);
+
+            RaycastHit2D[] hit = Physics2D.RaycastAll(_currentMousePosition, Vector2.zero, float.MaxValue, _layers);
             GameObject target = null;
-            if (hit.collider != null)
+
+            if (hit.Length > 0)
             {
-                target = hit.collider.gameObject;
-                IHover hoverTarget = hit.collider.GetComponent<IHover>();
+                target = hit[0].collider.gameObject;
+                IHover hoverTarget = hit[0].collider.GetComponent<IHover>();
                 SetHoverTarget(hoverTarget);
                           
             } else {
@@ -36,13 +43,17 @@ namespace Synapse.Controls
             // Always detects any mouse click
             if (Input.GetMouseButtonDown(0))
             {
-                OnMouseDown.Invoke(target);
-                Debug.Log($"Down: {target}");
+                OnMouseDown?.Invoke(target);
+#if UNITY_EDITOR
+                if (ShowDebugLogs) Debug.Log($"Down: {target}");
+#endif
             }
             else if (Input.GetMouseButtonUp(0))
             {
-                OnMouseUp.Invoke(target);
-                Debug.Log($"Up: {target}");
+                OnMouseUp?.Invoke(target);
+#if UNITY_EDITOR
+                if (ShowDebugLogs) Debug.Log($"Up: {target}");
+#endif
             }
 
             // Maybe click support
