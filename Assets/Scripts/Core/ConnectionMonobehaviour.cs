@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace Synapse.Core
 {
@@ -9,7 +8,7 @@ namespace Synapse.Core
         [SerializeField] private TextMesh _text;
         [SerializeField] private SpriteRenderer _renderer;
         public Connection Connection { get; set; }
-        public Node Node { get; set; }
+        public NodeMonoBehaviour NodeMonoBehaviour { get; set; }
 
         public TextMesh Text => _text;
         public SpriteRenderer Renderer => _renderer;
