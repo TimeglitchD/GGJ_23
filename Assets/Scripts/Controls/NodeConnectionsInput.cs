@@ -85,7 +85,8 @@ namespace Synapse.Controls {
                     if (!_nodeConnections.CanConnect(a, b))
                     {
 #if UNITY_EDITOR
-                        Debug.Log($"Connection <{a.Label} - {b.Label}> already exists.");
+                        if (ShowDebugLogs)
+                            Debug.Log($"Connection <{a.Label} - {b.Label}> already exists.");
 #endif
                     }
                     else
@@ -93,7 +94,8 @@ namespace Synapse.Controls {
                         BeforeConnected?.Invoke();
                         Edge edge = _nodeConnections.ConnectNodes(a, b);
 #if UNITY_EDITOR
-                        if (ShowDebugLogs) Debug.Log($"Connecting: <{a.Label} - {b.Label}>");
+                        if (ShowDebugLogs) 
+                            Debug.Log($"Connecting: <{a.Label} - {b.Label}>");
 #endif
                         OnConnected?.Invoke(edge);
                     }
