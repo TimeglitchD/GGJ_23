@@ -27,7 +27,8 @@ namespace Synapse.Core
             turnCounter++;
             OnNextTurn?.Invoke(turnCounter);
 #if UNITY_EDITOR
-            Debug.Log($"Turn counter: {turnCounter}");
+            if(ShowDebugLogs)
+                Debug.Log($"Turn counter: {turnCounter}");
 #endif
         }
 
