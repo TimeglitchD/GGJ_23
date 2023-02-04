@@ -22,6 +22,8 @@ namespace Synapse.Core
                 if (previousId != nodesToWin[j].Node.Id || nodesToWin[j].Node.Id == -1)
                     return;
 
+            // Why you no work
+
             Debug.Log("You won!");
         }
     }

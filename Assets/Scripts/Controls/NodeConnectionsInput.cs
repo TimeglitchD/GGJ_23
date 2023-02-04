@@ -1,4 +1,5 @@
 using Synapse.Core;
+using System;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -108,7 +109,7 @@ namespace Synapse.Controls {
                         // TODO dirty edge drawer
                         GameObject edgeObject = new GameObject();
                         LineRenderer line = edgeObject.AddComponent<LineRenderer>();
-                        line.material = _materials[_currentStartNode.Node.Id % _materials.Length];
+                        line.material = _materials[_currentStartNode.Node.Id % Math.Max(1, _materials.Length)];
                         line.SetPositions(new Vector3[2] { _currentStartNode.transform.position, node.transform.position});
                         
 
