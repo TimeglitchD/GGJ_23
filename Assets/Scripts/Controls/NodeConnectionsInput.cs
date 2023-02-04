@@ -81,7 +81,6 @@ namespace Synapse.Controls {
             // Debug
             _lineRenderer.enabled = false;
 
-           
             // Cancel path if no viable target has been found
             if (go == null)
             {
@@ -103,7 +102,7 @@ namespace Synapse.Controls {
             if (!_connecterPathStart.NeighbouringNodes.Contains(node))
             {
                 OnConnectionFailed?.Invoke(_connecterPathStart, node);
-                Debug.Log($"Path Failed:{_connecterPathStart.gameObject.name} - {node.gameObject.name} ");
+                //Debug.Log($"Path Failed:{_connecterPathStart.gameObject.name} - {node.gameObject.name} ");
                 _connecterPathStart = null;
                 return;
             }
@@ -117,13 +116,13 @@ namespace Synapse.Controls {
                 // Then spawn a new connection
                 _connectionLifetimeManager.SpawnConnection(_connecterPathStart, node);
 
-                Debug.Log($"Path Connected:{_connecterPathStart.gameObject.name} - {node.gameObject.name} ");
+                //Debug.Log($"Path Connected:{_connecterPathStart.gameObject.name} - {node.gameObject.name} ");
                 OnConnectionSuccess?.Invoke(_connecterPathStart, node);
                 _connecterPathStart = null;
                 return;
             }
 
-            Debug.Log($"Already has path:{_connecterPathStart.gameObject.name} - {node.gameObject.name} ");
+            //Debug.Log($"Already has path:{_connecterPathStart.gameObject.name} - {node.gameObject.name} ");
             _connecterPathStart = null;
             return;
         }
