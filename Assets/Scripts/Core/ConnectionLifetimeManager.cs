@@ -17,7 +17,7 @@ namespace Synapse.Core
             // Setup connection monobehaviour
             ConnectionMonobehaviour connectionObject = Instantiate(prefab);
             connectionObject.Connection = a.Node.Connections[a.Node.Connections.Count - 1];
-            connectionObject.Node = a.Node;
+            connectionObject.NodeMonoBehaviour = a;
 
             // Some visual elements
             SpriteRenderer sprite = connectionObject.Renderer;
@@ -25,14 +25,23 @@ namespace Synapse.Core
             sprite.material = _materials[a.Node.GroupId % _materials.Length];
 
             Vector3 c = (b.transform.position - a.transform.position).normalized;
-           
-            Vector3 center = (a.transform.position + b.transform.position) / 2.0f + offset;
-            connectionObject.transform.position = center;
+            Vector3 center = (b.transform.position + a.transform.position) / 2;
+            Vector3 diff = b.transform.position - a.transform.position;
+
+            int count = 1;
+            foreach (var connection in a.Node.Connections)
+                if (connection.Node == b.Node) count++;
+
+
+            Vector3 offset = (b.Node.GetConnectionIndex(a.Node) == 1) ? new Vector3(0.0f, .5f, 0.0f) : new Vector3(0.0f, -.5f, 0.0f);
+
+            connectionObject.transform.position = center + new Vector3(0.0f, .0f, 10.0f); ;
+            text.transform.position = center - .1f * count * diff;
 
             float dist = Vector3.Distance(b.transform.position, a.transform.position);
             sprite.transform.localScale = new Vector3(dist * .5f, .1f, 1.0f);
-            sprite.transform.localPosition += new Vector3(0.0f, .5f, 0.0f);
             sprite.gameObject.transform.rotation = Quaternion.LookRotation(c, Vector3.forward) * Quaternion.Euler(-90, 0, 90);
+            sprite.transform.localPosition += new Vector3(0.0f, .5f, 0.0f);
 
             text.text = connectionObject.Connection.DecayValue.ToString();
             _connections.Add(connectionObject);
@@ -48,7 +57,7 @@ namespace Synapse.Core
             Node other = connectionBehaviour.Connection.Node;
 
             // Remove it from this side
-            if (connectionBehaviour.Node.RemoveConnection(connectionBehaviour.Connection) == 1)
+            if (connectionBehaviour.NodeMonoBehaviour.Node.RemoveConnection(connectionBehaviour.Connection) == 1)
                 Debug.Log("Removed.");
            
 
@@ -70,10 +79,16 @@ namespace Synapse.Core
                     UpdateConnection(_connections[i]);
         }
 
+        public void UndoDecayToAll()
+        {
+
+        }
+
         public void Restart()
         {
-            for (int i = _connections.Count - 1; i > 0; i--)
+            for (int i = _connections.Count - 1; i >= 0; i--)
             {
+                _connections[i].NodeMonoBehaviour.Restart();
                 Destroy(_connections[i].gameObject);
                 _connections.RemoveAt(i);
             }
