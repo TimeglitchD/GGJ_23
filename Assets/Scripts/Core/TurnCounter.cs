@@ -9,7 +9,7 @@ namespace Synapse.Core
         int turnCounter = 0;
         [SerializeField] private NodeConnectionsInput connector;
 
-        public UnityEvent<int> OnNextTurn;
+        public UnityEvent<Edge, int> OnNextTurn;
 
 #if UNITY_EDITOR
         [Space]
@@ -17,15 +17,15 @@ namespace Synapse.Core
         [SerializeField] private bool ShowDebugLogs = false;
 #endif
 
-        private void Start()
+        private void Awake()
         {
-            connector.BeforeConnected.AddListener(NextTurn);
+            connector.OnEdgeCreated.AddListener(NextTurn);
         }
 
-        private void NextTurn()
+        private void NextTurn(Edge edge)
         {
             turnCounter++;
-            OnNextTurn?.Invoke(turnCounter);
+            OnNextTurn?.Invoke(edge, turnCounter);
 #if UNITY_EDITOR
             if(ShowDebugLogs)
                 Debug.Log($"Turn counter: {turnCounter}");

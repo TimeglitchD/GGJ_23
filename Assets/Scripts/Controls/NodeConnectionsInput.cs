@@ -6,16 +6,24 @@ namespace Synapse.Controls {
 
     public class NodeConnectionsInput : MonoBehaviour
     {
+        [SerializeField] private Material[] _materials;
+
         [SerializeField] private EventSystem _eventSystem;
         [SerializeField] private LineRenderer _lineRenderer; 
 
-        private NodeConnections _nodeConnections = new NodeConnections();
-        public NodeConnections NodeConnections => _nodeConnections;
+        private NodeConnecter _nodeConnections = new NodeConnecter();
+        public NodeConnecter NodeConnections => _nodeConnections;
 
         private ClickableNode _currentStartNode;
 
-        public UnityEvent BeforeConnected;
-        public UnityEvent<Edge> OnConnected;
+        public UnityEvent<Edge> OnEdgeCreated;
+
+        public UnityEvent<ClickableNode> OnStartConnection;
+        public UnityEvent<ClickableNode, ClickableNode> OnConnectionSuccess;
+        public UnityEvent<ClickableNode, ClickableNode> OnConnectionFailed;
+        public UnityEvent<ClickableNode, Vector3> OnConnectionCanceled;
+
+        ClickableNode _lastNode;
 
 #if UNITY_EDITOR
         [Space]
@@ -49,9 +57,11 @@ namespace Synapse.Controls {
             if (go == null) return;
             ClickableNode node = go.GetComponent<ClickableNode>();
             if (node == null) return;
+            if (node.Node.Id < 0) return;
 
             _currentStartNode = node;
-          
+            OnStartConnection?.Invoke(_currentStartNode);
+
 #if UNITY_EDITOR
             if (ShowDebugLogs) Debug.Log($"Started connection for: {_currentStartNode.Node.Label}");
 #endif
@@ -68,53 +78,62 @@ namespace Synapse.Controls {
             _lineRenderer.SetPositions(new Vector3[2] { _currentStartNode.transform.position, _eventSystem.CurrentMousePosition });
         }
 
+       
         private void TryConnecting(GameObject go)
         {
             if (_currentStartNode == null) return;
             _lineRenderer.enabled = false;
 
-            Node a = _currentStartNode.Node;
-            _currentStartNode = null;
-
+            _lastNode = _currentStartNode;
             if (go != null)
             {
                 ClickableNode node = go.GetComponent<ClickableNode>();
                 if (node != null)
                 {
+                    Node a = _currentStartNode.Node;
                     Node b = node.Node;
+
                     if (!_nodeConnections.CanConnect(a, b))
                     {
 #if UNITY_EDITOR
                         if (ShowDebugLogs)
                             Debug.Log($"Connection <{a.Label} - {b.Label}> already exists.");
 #endif
+                        OnConnectionFailed?.Invoke(_currentStartNode, node);
                     }
                     else
                     {
-                        BeforeConnected?.Invoke();
+                        OnConnectionSuccess?.Invoke(_currentStartNode, node);
+
+                        // TODO dirty edge drawer
+                        GameObject edgeObject = new GameObject();
+                        LineRenderer line = edgeObject.AddComponent<LineRenderer>();
+                        line.material = _materials[_currentStartNode.Node.Id % _materials.Length];
+                        line.SetPositions(new Vector3[2] { _currentStartNode.transform.position, node.transform.position});
+                        
+
                         Edge edge = _nodeConnections.ConnectNodes(a, b);
+                        edge.OnDecayed += () => Destroy(line.gameObject);
+                        edge.OnUpdatedId += (id) => line.material = _materials[id % _materials.Length];
+                        node.ConnectToNetwork();
 #if UNITY_EDITOR
                         if (ShowDebugLogs) 
                             Debug.Log($"Connecting: <{a.Label} - {b.Label}>");
 #endif
-                        OnConnected?.Invoke(edge);
+                        OnEdgeCreated?.Invoke(edge);
+                        
                     }
                 }
+                _currentStartNode = null;
                 return;
             }
-            EndConnection();
-        }
-       
-
-   
-
-        private void EndConnection()
-        {
 #if UNITY_EDITOR
             if (ShowDebugLogs && _currentStartNode) Debug.Log($"Connection stopped: {_currentStartNode.Node.Label}");
 #endif
 
-        }   
+            OnConnectionCanceled?.Invoke(_currentStartNode, _eventSystem.CurrentMousePosition);
+            _currentStartNode = null;
+        }
 
         private void Reset()
         {

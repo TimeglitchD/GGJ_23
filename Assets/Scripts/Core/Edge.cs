@@ -9,24 +9,18 @@ namespace Synapse.Core
         private Node _b;
 
         private int _persistenceValue;
+        public int PersistenceValue => _persistenceValue;
 
         public Node GetA => _a;
         public Node GetB => _b;
 
         public event Action OnDecayed;
-        public static Edge CreateConnection(Node a, Node b)
-        {
-            a.ConnectedNodes.Add(b);
-            b.ConnectedNodes.Add(a);
-            return new Edge(a, b);
-        }
+        public event Action<int> OnUpdatedId;
 
-
-        public Edge(Node a, Node b)
+        public Edge(Node a, Node b, int id)
         {
             _a = a;
             _b = b;
-            
             _persistenceValue = Math.Max(a.Value, b.Value);
         }
 
@@ -43,12 +37,16 @@ namespace Synapse.Core
             return false;
         }
 
-
+        public void UpdateId(int id)
+        {
+            OnUpdatedId?.Invoke(id);
+        }
 
         public void Remove()
         {
             OnDecayed?.Invoke();
             OnDecayed = null;
+            
         }
     }
 }

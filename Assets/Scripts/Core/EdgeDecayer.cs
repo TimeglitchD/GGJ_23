@@ -27,16 +27,22 @@ namespace Synapse.Core
         }
 
 
-        private void DecayEdges(int turn)
+        private void DecayEdges(Edge latestEdge, int turn)
         {
             Dictionary<string, Edge> edges = connector.NodeConnections.Edges;
             List<Edge> decayedEdges = new List<Edge>();
             foreach (KeyValuePair<string, Edge> pair in edges)
             {
                 Edge edge = pair.Value;
+                if (latestEdge == edge) continue;
+
                 // Queue keys for removal
-                if (edge.Decay())
+                if (edge.Decay())            
                     decayedEdges.Add(edge);
+#if UNITY_EDITOR
+                if (ShowDebugLogs)
+                    Debug.Log($"Decayed edge <{edge.GetA.Label} - {edge.GetB.Label}> value: {edge.PersistenceValue}");
+#endif
             }
             for (int i = 0; i < decayedEdges.Count; i++)
             {
