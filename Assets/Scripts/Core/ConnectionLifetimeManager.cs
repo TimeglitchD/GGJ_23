@@ -11,6 +11,8 @@ namespace Synapse.Core
         [SerializeField] private Material[] _materials;
 
         [SerializeField] Vector3 offset;
+        [SerializeField] float letterDistance = .2f;
+        [SerializeField] float connectionScale = 2.0f;
 
         public void SpawnConnection(NodeMonoBehaviour a, NodeMonoBehaviour b)
         {
@@ -36,10 +38,10 @@ namespace Synapse.Core
             Vector3 offset = (b.Node.GetConnectionIndex(a.Node) == 1) ? new Vector3(0.0f, .5f, 0.0f) : new Vector3(0.0f, -.5f, 0.0f);
 
             connectionObject.transform.position = center;
-            text.transform.position = center - .1f * count * diff + new Vector3(0.0f, .0f, -2.0f);
+            text.transform.position = center - letterDistance * count * diff + new Vector3(0.0f, .0f, -2.0f);
 
             float dist = Vector3.Distance(b.transform.position, a.transform.position);
-            sprite.transform.localScale = new Vector3(dist * .5f, .1f, 1.0f);
+            sprite.transform.localScale = new Vector3(dist * connectionScale * sprite.transform.localScale.x, sprite.transform.localScale.y, sprite.transform.localScale.z);
             sprite.gameObject.transform.rotation = Quaternion.LookRotation(c, Vector3.forward) * Quaternion.Euler(-90, 0, 90);
             sprite.transform.localPosition += new Vector3(0.0f, .5f, -1.0f);
 
@@ -56,9 +58,7 @@ namespace Synapse.Core
             Node other = connectionBehaviour.Connection.Node;
 
             // Remove it from this side
-            if (connectionBehaviour.NodeMonoBehaviour.Node.RemoveConnection(connectionBehaviour.Connection) == 1)
-                Debug.Log("Removed.");
-           
+            connectionBehaviour.NodeMonoBehaviour.Node.RemoveConnection(connectionBehaviour.Connection);
 
             Destroy(connectionBehaviour.gameObject);
             _connections.Remove(connectionBehaviour);

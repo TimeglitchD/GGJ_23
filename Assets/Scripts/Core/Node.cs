@@ -13,6 +13,7 @@ namespace Synapse.Core
     [System.Serializable]
     public struct NodeData
     {
+        public int UniqueId;
         public string Label;
         [Range(1, 10)] public  int Value;
         public NodeType NodeType;
