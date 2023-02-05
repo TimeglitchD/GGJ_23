@@ -1,4 +1,5 @@
 using Synapse.Core;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -16,6 +17,8 @@ namespace Synapse.Controls {
         public UnityEvent<NodeMonoBehaviour, Vector3> OnConnectionCanceled;
 
         NodeMonoBehaviour _connecterPathStart;
+
+        private List<SpriteRenderer> _renderers = new List<SpriteRenderer>();
 
 #if UNITY_EDITOR
         [Space]
@@ -55,6 +58,19 @@ namespace Synapse.Controls {
             if (!node.Node.CanInteract) return;
 
             _connecterPathStart = node;
+
+            _renderers.Clear();
+            _renderers.Add(_connecterPathStart.GetComponent<SpriteRenderer>());
+            _renderers[0].color = Color.gray;
+            foreach (NodeMonoBehaviour neighbour in node.NeighbouringNodes)
+            {
+                SpriteRenderer renderer = neighbour.GetComponent<SpriteRenderer>();
+                renderer.color = Color.gray;
+                _renderers.Add(renderer);
+            }
+
+
+
             //Debug.Log("Starting path");
             OnStartConnection?.Invoke(_connecterPathStart);
         }
@@ -73,6 +89,9 @@ namespace Synapse.Controls {
 
         private void EndPathConnector(GameObject go)
         {
+            foreach (SpriteRenderer renderer in _renderers)
+                renderer.color = Color.white;
+
             //Debug.Log("Ending path");
             // Has no start of path. Cannot connect
             if (_connecterPathStart == null) return;
