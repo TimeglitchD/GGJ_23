@@ -49,7 +49,7 @@ namespace Synapse.Core
             if (_visibleState == VisibleState.Hidden) return;
             _visibleState = VisibleState.Anonymous;
             gameObject.SetActive(false);
-        }            
+        }
 
         public void RevealFromFogOfWar()
         {
@@ -59,7 +59,7 @@ namespace Synapse.Core
         }
 
         public void ConnectToNetwork()
-        { 
+        {
             _visibleState = VisibleState.Visible;
             foreach (NodeMonoBehaviour node in _neighbouringNodes)
                 node.RevealFromFogOfWar();
@@ -76,6 +76,14 @@ namespace Synapse.Core
         public void EndPathConnection()
         {
             OnEndDrawPath?.Invoke();
+        }
+
+        public void Restart()
+        {
+            Hide();
+            Node.Connections.Clear();
+            Node.CanInteract = false;
+            new Node(_nodeData);
         }
 
 
@@ -102,14 +110,6 @@ namespace Synapse.Core
                     _neighbouringNodes.Add(item);
             }
         }
-
-        public void Restart()
-        {
-            Hide();
-            Node.Connections.Clear();
-            Node.CanInteract = false;
-            new Node(_nodeData);
-        }
-    }
 #endif
+    }
 }
