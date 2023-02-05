@@ -166,6 +166,12 @@ MonoBehaviour:
   - {fileID: 113733315}
   - {fileID: 250642444}
   - {fileID: 101266061}
+  OnStartDrawPath:
+    m_PersistentCalls:
+      m_Calls: []
+  OnEndDrawPath:
+    m_PersistentCalls:
+      m_Calls: []
   _maxDistance: 3.61
 --- !u!61 &38158086
 BoxCollider2D:
@@ -338,6 +344,12 @@ MonoBehaviour:
   - {fileID: 113733315}
   - {fileID: 250642444}
   - {fileID: 101266061}
+  OnStartDrawPath:
+    m_PersistentCalls:
+      m_Calls: []
+  OnEndDrawPath:
+    m_PersistentCalls:
+      m_Calls: []
   _maxDistance: 3.61
 --- !u!212 &101266062
 SpriteRenderer:
@@ -474,6 +486,12 @@ MonoBehaviour:
   - {fileID: 113733315}
   - {fileID: 250642444}
   - {fileID: 101266061}
+  OnStartDrawPath:
+    m_PersistentCalls:
+      m_Calls: []
+  OnEndDrawPath:
+    m_PersistentCalls:
+      m_Calls: []
   _maxDistance: 3.61
 --- !u!212 &113733316
 SpriteRenderer:
@@ -611,6 +629,12 @@ MonoBehaviour:
   - {fileID: 113733315}
   - {fileID: 250642444}
   - {fileID: 101266061}
+  OnStartDrawPath:
+    m_PersistentCalls:
+      m_Calls: []
+  OnEndDrawPath:
+    m_PersistentCalls:
+      m_Calls: []
   _maxDistance: 3.61
 --- !u!212 &250642445
 SpriteRenderer:
@@ -721,6 +745,12 @@ MonoBehaviour:
   - {fileID: 1928899114}
   - {fileID: 113733315}
   - {fileID: 250642444}
+  OnStartDrawPath:
+    m_PersistentCalls:
+      m_Calls: []
+  OnEndDrawPath:
+    m_PersistentCalls:
+      m_Calls: []
   _maxDistance: 3.61
 --- !u!61 &286960589
 BoxCollider2D:
@@ -882,6 +912,12 @@ MonoBehaviour:
   - {fileID: 387773771}
   - {fileID: 819880883}
   - {fileID: 983844210}
+  OnStartDrawPath:
+    m_PersistentCalls:
+      m_Calls: []
+  OnEndDrawPath:
+    m_PersistentCalls:
+      m_Calls: []
   _maxDistance: 3.61
 --- !u!212 &387773772
 SpriteRenderer:
@@ -1015,6 +1051,12 @@ MonoBehaviour:
   - {fileID: 387773771}
   - {fileID: 819880883}
   - {fileID: 983844210}
+  OnStartDrawPath:
+    m_PersistentCalls:
+      m_Calls: []
+  OnEndDrawPath:
+    m_PersistentCalls:
+      m_Calls: []
   _maxDistance: 3.61
 --- !u!212 &819880884
 SpriteRenderer:
@@ -1148,6 +1190,12 @@ MonoBehaviour:
   - {fileID: 387773771}
   - {fileID: 819880883}
   - {fileID: 983844210}
+  OnStartDrawPath:
+    m_PersistentCalls:
+      m_Calls: []
+  OnEndDrawPath:
+    m_PersistentCalls:
+      m_Calls: []
   _maxDistance: 3.61
 --- !u!212 &983844211
 SpriteRenderer:
@@ -1444,6 +1492,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _startNode: {fileID: 983844210}
+  _goalNodes: []
+  _input: {fileID: 4290424691418616456}
 --- !u!4 &1401963758
 Transform:
   m_ObjectHideFlags: 0
@@ -1502,6 +1552,12 @@ MonoBehaviour:
   - {fileID: 250642444}
   - {fileID: 101266061}
   - {fileID: 387773771}
+  OnStartDrawPath:
+    m_PersistentCalls:
+      m_Calls: []
+  OnEndDrawPath:
+    m_PersistentCalls:
+      m_Calls: []
   _maxDistance: 3.61
 --- !u!61 &1454927412
 BoxCollider2D:
@@ -1781,6 +1837,12 @@ MonoBehaviour:
   - {fileID: 1928899114}
   - {fileID: 113733315}
   - {fileID: 250642444}
+  OnStartDrawPath:
+    m_PersistentCalls:
+      m_Calls: []
+  OnEndDrawPath:
+    m_PersistentCalls:
+      m_Calls: []
   _maxDistance: 3.61
 --- !u!212 &1928899115
 SpriteRenderer:
@@ -1914,6 +1976,12 @@ MonoBehaviour:
   - {fileID: 1987597535}
   - {fileID: 1454927411}
   - {fileID: 387773771}
+  OnStartDrawPath:
+    m_PersistentCalls:
+      m_Calls: []
+  OnEndDrawPath:
+    m_PersistentCalls:
+      m_Calls: []
   _maxDistance: 3.61
 --- !u!212 &1987597536
 SpriteRenderer:
